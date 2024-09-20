@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pe-wa-deployment
+  name: stopwatch-deployment
 spec:
   replicas: 6  # Number of desired replicas
   selector:
     matchLabels:
-      app: pe-wa
+      app: stopwatch
   template:
     metadata:
       labels:
-        app: pe-wa
+        app: stopwatch
     spec:
       containers:
-      - name: pe-wa
-        image: yash5090/pe-wa:latest
+      - name: stopwatch
+        image: yash5090/stopwatch:latest
         ports:
         - containerPort: 5000
