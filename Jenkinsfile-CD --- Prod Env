@@ -39,7 +39,7 @@ pipeline {
                         }
                         
                         withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
-                                sh 'kubectl apply -f ${deploymentFile}'
+                                sh "kubectl apply -f ${deploymentFile}"
                                 sh 'kubectl apply -f service.yaml'
                                 sh 'kubectl apply -f job.yaml'
                                 sh 'kubectl apply -f pv.yaml'
