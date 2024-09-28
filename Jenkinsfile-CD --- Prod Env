@@ -31,6 +31,13 @@ pipeline {
             steps{
                 script{
                     //dir('K8S') {
+                        def deploymentFile = ""
+                        if (params.DEPLOY_ENV == 'blue') {
+                            deploymentFile = 'app-deployment-blue.yml'
+                        } else {
+                            deploymentFile = 'app-deployment-green.yml'
+                        }
+                        
                         withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
                                 sh 'kubectl apply -f deployment.yaml'
                                 sh 'kubectl apply -f service.yaml'
