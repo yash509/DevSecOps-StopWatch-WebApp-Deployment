@@ -4,6 +4,13 @@ pipeline {
         jdk 'jdk17'
         nodejs 'node16'
     }
+
+    parameters {
+        choice(name: 'DEPLOY_ENV', choices: ['blue', 'green'], description: 'Choose which environment to deploy: Blue or Green')
+        choice(name: 'DOCKER_TAG', choices: ['blue', 'green'], description: 'Choose the Docker image tag for the deployment')
+        booleanParam(name: 'SWITCH_TRAFFIC', defaultValue: false, description: 'Switch traffic between Blue and Green')
+    }
+    
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
     }
@@ -37,8 +44,27 @@ pipeline {
                 }
             }
         }
+
+        stage('Switch Traffic Between Blue & Green Environment') {
+            when {
+                expression { return params.SWITCH_TRAFFIC }
+            }
+            steps {
+                script {
+                    def newEnv = params.DEPLOY_ENV
+
+                    // Always switch traffic based on DEPLOY_ENV
+                    withKubeConfig(caCertificate: '', clusterName: 'App-Cluster', contextName: '', credentialsId: 'k8s', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
+                        sh '''
+                            kubectl patch service bankapp-service -p "{\\"spec\\": {\\"selector\\": {\\"app\\": \\"bankapp\\", \\"version\\": \\"''' + newEnv + '''\\"}}}" -n ${KUBE_NAMESPACE}
+                        '''
+                    }
+                    echo "Traffic has been switched to the ${newEnv} environment."
+                }
+            }
+        }
         
-         stage('Verify the Kubernetes Deployments') { 
+        stage('Verify the Kubernetes Deployments') { 
             steps { 
                 withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') { 
                     sh "kubectl get all "
@@ -47,7 +73,8 @@ pipeline {
                     sh "kubectl get ns"
                 } 
             } 
-        } 
+        }
+              
         stage('Deployment Done') {
             steps {
                 echo 'Deployed Succcessfully...'
